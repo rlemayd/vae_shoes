@@ -109,7 +109,7 @@ if __name__ == '__main__' :
         while(filename != 'end') :
             target_size = (configuration.get_image_height(), configuration.get_image_width())
             image = process_fun(data.read_image(filename, configuration.get_number_of_channels()), target_size )
-            _input = 1- image / 255
+            _input = 1 - image / 255
             _input = tf.expand_dims(_input, 0)        
             pred = model.predict(_input)
             pred = pred[0]
