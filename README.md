@@ -12,3 +12,4 @@ python train.py -mode train -config configs/sbir_vae.config -name SBIR
 
 python train.py -mode predict -config configs/sbir_vae.config -name SBIR
 
+![Example](results/duck_1.png)
