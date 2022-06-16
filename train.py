@@ -11,7 +11,7 @@ To use train.py, you will require to set the following parameters :
 """
 import pathlib
 import sys
-sys.path.append('/home/jsaavedr/Research/git/tensorflow-2/convnet2')
+sys.path.append('/content/convnet2')
 sys.path.append(str(pathlib.Path().absolute()))
 import tensorflow as tf
 from models import vae
