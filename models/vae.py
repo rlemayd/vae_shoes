@@ -45,13 +45,13 @@ class ConvBlock(tf.keras.layers.Layer):
 class Encoder(tf.keras.layers.Layer):
     def __init__(self, channels, target_dimension, **kwargs):
         super(Encoder, self).__init__(**kwargs)        
-        self.conv1 = ConvBlock(channels[0]) #64
+        self.conv1 = ConvBlock(channels[0]) #64 -> 32
         self.bn_relu_1 = BNReLU()
-        self.conv2 = ConvBlock(channels[1]) #32
+        self.conv2 = ConvBlock(channels[1]) #32 -> 16
         self.bn_relu_2 = BNReLU()
-        self.conv3 = ConvBlock(channels[2]) #16
+        self.conv3 = ConvBlock(channels[2]) #16 -> 8
         self.bn_relu_3 = BNReLU()
-        self.conv4 = ConvBlock(channels[3]) #8 x 8  x 64 
+        self.conv4 = ConvBlock(channels[3]) #8 x 8 x 64  ->  4 x 4 x 64
         self.bn_relu_4 = BNReLU()
         self.flatten = tf.keras.layers.Flatten()
         self.dense_mu = tf.keras.layers.Dense(target_dimension)
@@ -60,11 +60,11 @@ class Encoder(tf.keras.layers.Layer):
         
     def call(self, inputs, training):
         #input = [128,128,1]
-        y = self.bn_relu_1(self.conv1(inputs), training) #64x64
-        y = self.bn_relu_2(self.conv2(y), training) #32x32
-        y = self.bn_relu_3(self.conv3(y), training) #16x16
-        y = self.bn_relu_4(self.conv4(y), training) #8
-        y = self.flatten(y)  # 8x8x64 = 4096
+        y = self.bn_relu_1(self.conv1(inputs), training) #64x64 -> 32x32
+        y = self.bn_relu_2(self.conv2(y), training) #32x32 -> 16x16
+        y = self.bn_relu_3(self.conv3(y), training) #16x16 -> 8x8
+        y = self.bn_relu_4(self.conv4(y), training) #8x8 -> 4x4
+        y = self.flatten(y)  # 8x8x64 = 4096  ->  4x4x64 = 1024
         mu = self.dense_mu(y)
         log_var = self.dense_log_var(y)
         x = tf.concat([mu, log_var], axis = 1) #axis
@@ -73,7 +73,8 @@ class Encoder(tf.keras.layers.Layer):
 class Decoder(tf.keras.layers.Layer):
     def __init__(self, channels, **kwargs):
         super(Decoder, self).__init__(**kwargs)
-        self.dense_1 = tf.keras.layers.Dense(4096)
+        # self.dense_1 = tf.keras.layers.Dense(4096)
+        self.dense_1 = tf.keras.layers.Dense(1024)
         #self.up = tf.keras.layers.UpSampling2D(interpolation = 'bilinear')        
         
         self.conv1 = tf.keras.layers.Conv2DTranspose(channels[0], 3, strides = 2, padding = 'same')
@@ -84,17 +85,18 @@ class Decoder(tf.keras.layers.Layer):
         self.bn_relu_3 = BNReLU()
         self.conv4 = tf.keras.layers.Conv2DTranspose(channels[3], 3, strides = 2, padding = 'same')
         self.bn_relu_4 = BNReLU()
-        self.conv5 = tf.keras.layers.Conv2D(1,  (1,1))
+        self.conv5 = tf.keras.layers.Conv2D(1, (1, 1))
         self.sigmoid = tf.keras.activations.sigmoid
         
                 
     def call(self, inputs, training):
         y = self.dense_1(inputs)
-        y = tf.reshape(y, (-1, 8,8,64))
-        y = self.bn_relu_1(self.conv1(y), training) #16
-        y = self.bn_relu_2(self.conv2(y), training) #32
-        y = self.bn_relu_3(self.conv3(y), training) #64 
-        y = self.bn_relu_4(self.conv4(y), training) #128
+        # y = tf.reshape(y, (-1, 8,8,64))
+        y = tf.reshape(y, (-1, 4, 4, 64))
+        y = self.bn_relu_1(self.conv1(y), training) #16  -> 8
+        y = self.bn_relu_2(self.conv2(y), training) #32  -> 16
+        y = self.bn_relu_3(self.conv3(y), training) #64  -> 32
+        y = self.bn_relu_4(self.conv4(y), training) #128 -> 64
         y = self.conv5(y)
         y = self.sigmoid(y)
         return y 
