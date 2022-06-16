@@ -108,20 +108,23 @@ if __name__ == '__main__' :
         filename = input('file :')
         while(filename != 'end') :
             target_size = (configuration.get_image_height(), configuration.get_image_width())
-            image = process_fun(data.read_image(filename, configuration.get_number_of_channels()), target_size )
+            image = process_fun(data.read_image(filename, configuration.get_number_of_channels()), target_size)
             _input = 1 - image / 255
             _input = tf.expand_dims(_input, 0)        
             pred = model.predict(_input)
             pred = pred[0]
-            mu_log_var = tf.slice(pred, [0],[256])
-            x = tf.slice(pred, [256],[-1])
-            x_pred = tf.reshape(x, (128,128))
-            fig, xs = plt.subplots(1,2)
-            xs[0].imshow(image, cmap = 'gray')
+            mu_log_var = tf.slice(pred, [0], [256])
+            x = tf.slice(pred, [256], [-1])
+            # x_pred = tf.reshape(x, (128,128))
+            x_pred = tf.reshape(x, target_size)
+            fig, xs = plt.subplots(1, 2)
+            xs[0].imshow(np.squeeze(image), cmap='gray')
             xs[0].set_title('Original')
             xs[1].imshow(np.uint8(255 - x_pred*255), cmap = 'gray')
             xs[1].set_title('Reconstruido')
-            plt.pause(5)            
+            # plt.pause(5)
+            output_name = filename.split('/')[-1]
+            plt.savefig(output_name)
             filename = input('file :')            
     #save the model   
     if pargs.save :
